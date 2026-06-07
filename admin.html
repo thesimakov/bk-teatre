@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ТБДТ · Кабинет администратора</title>
+<meta name="description" content="Демонстрационный кабинет администратора: цены, аналитика, бухгалтерия и финансы." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Manrope:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="admin.css" />
+</head>
+<body class="admin">
+
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ░░░ SIDEBAR ░░░ -->
+<aside class="side">
+  <a class="side-brand" href="index.html">
+    <img src="assets/logo.png" alt="ТБДТ" />
+    <span>Кабинет<br><b>администратора</b></span>
+  </a>
+
+  <div class="side-profile">
+    <span class="avatar" aria-hidden="true">АВ</span>
+    <span class="sp-info">
+      <b>А. Винтур</b>
+      <em>директор по продажам</em>
+    </span>
+  </div>
+
+  <nav class="side-nav" id="sideNav">
+    <a href="#" class="active" data-tab="overview"><span class="ni">◉</span> Обзор</a>
+    <a href="#" data-tab="prices"><span class="ni">₽</span> Цены</a>
+    <a href="#" data-tab="analytics"><span class="ni">∿</span> Аналитика</a>
+    <a href="#" data-tab="ledger"><span class="ni">▤</span> Бухгалтерия</a>
+  </nav>
+
+  <a class="side-back" href="index.html">← Вернуться на сайт</a>
+</aside>
+
+<!-- ░░░ MAIN ░░░ -->
+<main class="main">
+  <header class="top">
+    <div class="top-title">
+      <p class="crumb">ТБДТ · Прощальные гастроли</p>
+      <h1 id="pageTitle">Обзор</h1>
+    </div>
+    <div class="period" id="period" role="tablist" aria-label="Период">
+      <button data-p="week">Неделя</button>
+      <button data-p="month" class="active">Месяц</button>
+      <button data-p="season">Сезон</button>
+    </div>
+  </header>
+
+  <!-- finance status banner -->
+  <div class="status-banner" id="statusBanner" data-state="up">
+    <div class="sb-mark" id="sbMark" aria-hidden="true">▲</div>
+    <div class="sb-text">
+      <strong id="sbTitle">Продажи растут</strong>
+      <span id="sbDesc">Выручка выше плана — спектакль уверенно собирает зал.</span>
+    </div>
+    <div class="sb-fig">
+      <b id="sbValue">+0%</b>
+      <em>к прошлому периоду</em>
+    </div>
+  </div>
+
+  <!-- ░ TAB: OVERVIEW ░ -->
+  <div class="tab" data-panel="overview">
+    <section class="kpis" id="kpis"></section>
+
+    <section class="panel-grid">
+      <div class="panel pad chart-panel">
+        <div class="panel-head">
+          <h2>Выручка по дням</h2>
+          <span class="ph-total" id="revTotal">—</span>
+        </div>
+        <div class="chart" id="revChart"></div>
+      </div>
+      <div class="panel pad">
+        <div class="panel-head"><h2>Заполняемость зала</h2></div>
+        <div class="gauge" id="occGauge"></div>
+        <ul class="occ-list" id="occList"></ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- ░ TAB: PRICES ░ -->
+  <div class="tab" data-panel="prices" hidden>
+    <section class="panel pad">
+      <div class="panel-head">
+        <h2>Управление ценами</h2>
+        <button class="btn btn-gold" id="addTier">+ Добавить тариф</button>
+      </div>
+      <p class="panel-note">Измените стоимость зон — прогноз выручки и финансовый статус пересчитаются автоматически.</p>
+
+      <div class="table-wrap">
+        <table class="dtable price-table">
+          <thead>
+            <tr><th>Зона</th><th>Цвет</th><th class="num">Мест</th><th class="num">Продано</th><th class="num">Цена, ₽</th><th class="num">Сумма, ₽</th><th></th></tr>
+          </thead>
+          <tbody id="priceBody"></tbody>
+        </table>
+      </div>
+
+      <div class="price-foot">
+        <div class="pf-block">
+          <span>Прогноз выручки</span>
+          <b id="projRevenue">—</b>
+        </div>
+        <div class="pf-block">
+          <span>План на сезон</span>
+          <b id="planRevenue">—</b>
+        </div>
+        <div class="pf-status" id="priceStatus" data-state="up">
+          <span class="pfs-dot"></span><span id="priceStatusText">—</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ░ TAB: ANALYTICS ░ -->
+  <div class="tab" data-panel="analytics" hidden>
+    <section class="panel-grid">
+      <div class="panel pad chart-panel">
+        <div class="panel-head"><h2>Динамика среднего чека</h2><span class="ph-total" id="avgTotal">—</span></div>
+        <div class="chart" id="avgChart"></div>
+      </div>
+      <div class="panel pad">
+        <div class="panel-head"><h2>Выручка по зонам</h2></div>
+        <ul class="zonebars" id="zoneBars"></ul>
+      </div>
+    </section>
+    <section class="panel pad">
+      <div class="panel-head"><h2>Каналы продаж</h2></div>
+      <ul class="zonebars channels" id="channelBars"></ul>
+    </section>
+  </div>
+
+  <!-- ░ TAB: LEDGER ░ -->
+  <div class="tab" data-panel="ledger" hidden>
+    <section class="ledger-sum" id="ledgerSum"></section>
+    <section class="panel pad">
+      <div class="panel-head">
+        <h2>Книга операций</h2>
+        <button class="btn btn-gold" id="addExpense">+ Добавить расход</button>
+      </div>
+      <div class="table-wrap">
+        <table class="dtable ledger-table">
+          <thead>
+            <tr><th>Дата</th><th>Операция</th><th>Категория</th><th class="num">Сумма, ₽</th><th>Статус</th></tr>
+          </thead>
+          <tbody id="ledgerBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="admin.js"></script>
+</body>
+</html>
