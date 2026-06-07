@@ -294,27 +294,52 @@
   /* ============================================================ DATES */
   const WD = ["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"];
   const MON = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"];
+  // left — остаток билетов на дату, cap — вместимость (для шкалы индикатора)
+  const DATE_CAP = 200;
   const DATES = [
-    { d: 7,  m: 5, wd: 0, times: ["19:00"] },
-    { d: 8,  m: 5, wd: 1, times: ["17:00", "21:00"] },
-    { d: 9,  m: 5, wd: 2, times: ["19:00"] },
-    { d: 10, m: 5, wd: 3, times: ["19:00"] },
-    { d: 11, m: 5, wd: 4, times: ["19:30"] },
-    { d: 14, m: 5, wd: 0, times: ["18:00"] },
-    { d: 16, m: 5, wd: 2, times: ["19:00"] },
+    { d: 7,  m: 5, wd: 0, times: ["19:00"],          left: 0   },
+    { d: 8,  m: 5, wd: 1, times: ["17:00", "21:00"], left: 48  },
+    { d: 9,  m: 5, wd: 2, times: ["19:00"],          left: 2   },
+    { d: 10, m: 5, wd: 3, times: ["19:00"],          left: 6   },
+    { d: 11, m: 5, wd: 4, times: ["19:30"],          left: 27  },
+    { d: 14, m: 5, wd: 0, times: ["18:00"],          left: 0   },
+    { d: 16, m: 5, wd: 2, times: ["19:00"],          left: 124 },
   ];
+
+  // склонение слова «билет»
+  const ticketWord = (n) => {
+    const a = Math.abs(n) % 100, b = a % 10;
+    if (a > 10 && a < 20) return "билетов";
+    if (b === 1) return "билет";
+    if (b >= 2 && b <= 4) return "билета";
+    return "билетов";
+  };
+  // состояние остатков → класс + подпись
+  function availability(left) {
+    if (left <= 0)  return { cls: "sold", text: "Билетов нет" };
+    if (left <= 10) return { cls: "low",  text: `Осталось ${left} ${ticketWord(left)}` };
+    if (left <= 40) return { cls: "mid",  text: `Осталось ${left} ${ticketWord(left)}` };
+    return { cls: "ok", text: "Билеты есть" };
+  }
 
   function buildDates() {
     dateRail.innerHTML = "";
     DATES.forEach((dt, i) => {
+      const av = availability(dt.left);
+      const pct = Math.max(2, Math.min(100, Math.round((dt.left / DATE_CAP) * 100)));
       const card = document.createElement("button");
-      card.className = "date-card" + (i === state.dateIdx ? " active" : "");
+      card.className = "date-card " + av.cls + (i === state.dateIdx ? " active" : "");
       card.setAttribute("role", "tab");
+      if (av.cls === "sold") card.setAttribute("aria-disabled", "true");
       card.dataset.idx = i;
       card.innerHTML = `
         <div class="dc-day"><b>${dt.d}</b> ${MON[dt.m]}</div>
         <div class="dc-wd">${WD[dt.wd]}</div>
-        <div class="dc-times">${dt.times.map(t => `<span class="dc-time">${t}</span>`).join("")}</div>`;
+        <div class="dc-times">${dt.times.map(t => `<span class="dc-time">${t}</span>`).join("")}</div>
+        <div class="dc-avail">
+          <span class="dc-bar"><span class="dc-bar-fill" style="width:${av.cls === "sold" ? 0 : pct}%"></span></span>
+          <span class="dc-left">${av.text}</span>
+        </div>`;
       dateRail.appendChild(card);
     });
   }
@@ -322,7 +347,9 @@
   dateRail.addEventListener("click", (e) => {
     const card = e.target.closest(".date-card");
     if (!card) return;
-    state.dateIdx = +card.dataset.idx;
+    const idx = +card.dataset.idx;
+    if (DATES[idx].left <= 0) { toast("На эту дату билетов нет — выберите другую"); return; }
+    state.dateIdx = idx;
     state.time = DATES[state.dateIdx].times[0];
     dateRail.querySelectorAll(".date-card").forEach((c) =>
       c.classList.toggle("active", +c.dataset.idx === state.dateIdx));

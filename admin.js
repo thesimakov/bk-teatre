@@ -55,6 +55,17 @@
     { name: "Промо/пресса",val: 0.07 },
   ];
 
+  // статистика по спектаклям репертуара (demo)
+  const PLAY_STATS = [
+    { title: "Прощальные гастроли", shows: 6, tickets: 3120, revenue: 7_480_000, occ: 0.92 },
+    { title: "Гамлет",              shows: 4, tickets: 1840, revenue: 4_120_000, occ: 0.81 },
+    { title: "Чайка",               shows: 3, tickets: 1290, revenue: 2_640_000, occ: 0.74 },
+    { title: "Вишнёвый сад",        shows: 3, tickets: 1110, revenue: 2_180_000, occ: 0.69 },
+    { title: "Ревизор",             shows: 2, tickets: 560,  revenue: 980_000,   occ: 0.63 },
+    { title: "Щелкунчик",           shows: 2, tickets: 720,  revenue: 1_260_000, occ: 0.88 },
+  ];
+  let ovMode = "general"; // режим Обзора: general | plays
+
   // editable price tiers
   let TIERS = [
     { zone: "Партер",    color: "#e0533f", seats: 166, sold: 150, price: 3500 },
@@ -273,6 +284,54 @@
       ? "Выручка выше прошлого периода — спектакль уверенно собирает зал."
       : "Выручка ниже прошлого периода — стоит усилить промо и пересмотреть цены.";
     $("#sbValue").textContent = pct(delta);
+  }
+
+  /* ============================================================ RENDER: OVERVIEW · BY PLAY */
+  function renderPlays() {
+    const totalRev   = PLAY_STATS.reduce((a, p) => a + p.revenue, 0);
+    const totalTick  = PLAY_STATS.reduce((a, p) => a + p.tickets, 0);
+    const totalShows = PLAY_STATS.reduce((a, p) => a + p.shows, 0);
+    const avgOcc     = PLAY_STATS.reduce((a, p) => a + p.occ, 0) / (PLAY_STATS.length || 1);
+
+    const kpis = [
+      { label: "Спектаклей",   val: PLAY_STATS.length },
+      { label: "Показов",      val: totalShows },
+      { label: "Билетов",      val: totalTick.toLocaleString("ru-RU") },
+      { label: "Сборы",        val: kop(totalRev) },
+    ];
+    $("#playKpis").innerHTML = kpis.map(k => `
+      <div class="kpi">
+        <div class="kpi-label">${k.label}</div>
+        <div class="kpi-val">${k.val}</div>
+      </div>`).join("");
+
+    $("#playsTotal").textContent = `${PLAY_STATS.length} спект. · ${kop(totalRev)}`;
+
+    const maxRev = Math.max(...PLAY_STATS.map(p => p.revenue)) || 1;
+    const sorted = [...PLAY_STATS].sort((a, b) => b.revenue - a.revenue);
+    $("#playsBody").innerHTML = sorted.map(p => {
+      const avg = p.tickets ? p.revenue / p.tickets : 0;
+      const occCls = p.occ >= 0.8 ? "income" : p.occ >= 0.6 ? "soon" : "expense";
+      return `<tr>
+        <td><span class="play-name"><span class="play-dot" style="width:${Math.max(8, p.revenue / maxRev * 100).toFixed(0)}%"></span>${p.title}</span></td>
+        <td class="num">${p.shows}</td>
+        <td class="num">${p.tickets.toLocaleString("ru-RU")}</td>
+        <td class="num">${rub(p.revenue)}</td>
+        <td class="num">${rub(avg)}</td>
+        <td>
+          <div class="load-cell">
+            <span class="load-track"><span class="load-fill" style="width:${Math.round(p.occ * 100)}%"></span></span>
+            <span class="load-meta"><b>${Math.round(p.occ * 100)}%</b> · <em class="load-badge ${occCls}">${p.occ >= 0.8 ? "высокая" : p.occ >= 0.6 ? "средняя" : "низкая"}</em></span>
+          </div>
+        </td>
+      </tr>`;
+    }).join("");
+  }
+
+  // render the active sub-view of the Обзор tab
+  function renderOverviewTab() {
+    if (ovMode === "plays") renderPlays();
+    else renderOverview();
   }
 
   /* ============================================================ RENDER: ANALYTICS */
@@ -599,10 +658,20 @@
   // tabs
   const TITLES = { overview: "Обзор", prices: "Цены", halls: "Залы", events: "События", actors: "Актёры", rental: "Аренда зала", analytics: "Аналитика", ledger: "Бухгалтерия" };
   const TAB_RENDER = {
-    overview: renderOverview, analytics: renderAnalytics, prices: renderPrices,
+    overview: renderOverviewTab, analytics: renderAnalytics, prices: renderPrices,
     halls: renderHalls, events: renderEvents, actors: renderActors,
     rental: renderRental, ledger: renderLedger,
   };
+
+  // Обзор: переключатель «Общая статистика / По спектаклям»
+  $("#ovFilter").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-ov]");
+    if (!btn) return;
+    ovMode = btn.dataset.ov;
+    $$("#ovFilter button").forEach(b => b.classList.toggle("active", b === btn));
+    $$('.ov-view').forEach(v => (v.hidden = v.dataset.ov !== ovMode));
+    renderOverviewTab();
+  });
 
   /* ---- path-based routing: each section is a direct link like /halls ---- */
   // base directory of the admin page, e.g. "/" or "/bk/"
@@ -652,7 +721,7 @@
     if (!btn) return;
     curPeriod = btn.dataset.p;
     $$("#period button").forEach(b => b.classList.toggle("active", b === btn));
-    renderOverview();
+    renderOverviewTab();
     renderAnalytics();
   });
 
@@ -706,6 +775,12 @@
     LEDGER.push({ date: `${String(day).padStart(2, "0")}.06`, op: tpl.op, cat: tpl.cat, amount: tpl.amount, type: "expense" });
     renderLedger();
     toast("Расход добавлен в книгу операций");
+  });
+
+  // build report — открывает образец PDF-отчёта (книга операций)
+  $("#buildReport").addEventListener("click", () => {
+    toast("Открываю отчёт (образец PDF)…");
+    window.open(ROUTE_BASE + "docs/otchet-buhgalteriya-shablon.pdf", "_blank");
   });
 
   /* ---- halls: palette select ---- */
