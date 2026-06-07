@@ -1,7 +1,7 @@
 /* ============================================================
-   ТБДТ · Кабинет администратора (demo) — light playbill admin
-   Shares the front-of-house palette: warm paper, espresso ink,
-   deep-navy & gold-leaf accents.
+   ТБДТ · Кабинет администратора (demo) — clean modern light admin
+   Aesthetic: clean modern light theme — navy + gold accents.
+   Display: Unbounded. UI/labels: Manrope.
    ============================================================ */
 
 :root{
@@ -17,6 +17,8 @@
   --navy-hi:   #2C2E5C;
   --gold:      #E6B81C;
   --gold-deep: #A8810F;
+  --gold-hi:   #F5CD33;
+  --font-acc:  var(--font-disp);
 
   --line:      rgba(20,20,30,.08);
   --line-2:    rgba(20,20,30,.14);

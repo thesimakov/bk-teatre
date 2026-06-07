@@ -1,8 +1,7 @@
 /* ============================================================
    ТБДТ · Театральная касса — LIGHT
-   Aesthetic: an ivory playbill — warm paper, espresso ink,
-   deep-navy curtain & gold-leaf accents.
-   Display: Cormorant Garamond. UI: Manrope. Labels: Unbounded.
+   Aesthetic: clean modern light theme — navy + gold accents.
+   Display: Unbounded. UI/labels: Manrope.
    ============================================================ */
 
 :root{
@@ -18,6 +17,8 @@
   --navy-hi:   #2C2E5C;
   --gold:      #E6B81C;
   --gold-deep: #A8810F;
+  --gold-hi:   #F5CD33;
+  --font-acc:  var(--font-disp);
 
   --line:      rgba(20,20,30,.08);
   --line-2:    rgba(20,20,30,.14);
