@@ -63,7 +63,7 @@
 
 <!-- ░░░ DATES ░░░ -->
 <section class="dates" id="afisha">
-  <div class="section-head">
+  <div class="section-head" data-reveal>
     <div class="sh-left">
       <p class="section-eyebrow"><span class="se-num">01</span> Афиша</p>
       <h2 class="section-title">Ближайшие даты</h2>
@@ -71,7 +71,7 @@
     <p class="section-note">Выберите дату и время сеанса</p>
   </div>
   <div class="date-rail" id="dateRail" role="tablist" aria-label="Даты спектакля"></div>
-  <div class="session-bar">
+  <div class="session-bar" data-reveal>
     <div class="session-info">
       <span class="si-date" id="sessionDate">8 июня '26 в 17:00</span>
       <span class="si-hall">ТБДТ · Большой зал</span>
@@ -82,7 +82,7 @@
 
 <!-- ░░░ HALL / SEAT MAP ░░░ -->
 <section class="hall" id="hall">
-  <div class="section-head">
+  <div class="section-head" data-reveal>
     <div class="sh-left">
       <p class="section-eyebrow"><span class="se-num">02</span> Зал</p>
       <h2 class="section-title">Выбор мест</h2>
@@ -90,7 +90,7 @@
     <p class="section-note">Большой зал · нажмите на место на схеме</p>
   </div>
   <div class="hall-shell">
-    <div class="hall-main">
+    <div class="hall-main" data-reveal>
       <div class="hall-toolbar">
         <button class="hall-expand" id="expandHallBtn" type="button" aria-pressed="false">
           <span class="he-icon" aria-hidden="true">⤢</span>
@@ -117,7 +117,7 @@
     </div>
 
     <!-- ORDER SUMMARY -->
-    <aside class="order" id="order" aria-label="Ваш заказ">
+    <aside class="order" id="order" aria-label="Ваш заказ" data-reveal>
       <div class="order-card">
         <header class="order-head">
           <h3>Ваш заказ</h3>
@@ -141,6 +141,16 @@
           <div class="ot-row ot-grand">
             <span>Итого</span><span id="totalSum">0 ₽</span>
           </div>
+          <div class="ot-row ot-bonus">
+            <span class="ot-bonus-label">
+              Ваш бонус 5%
+              <span class="hint">
+                <button class="hint-btn" type="button" aria-label="Подробнее о бонусах">?</button>
+                <span class="hint-pop" role="tooltip">Бонусы — 5% от стоимости билетов. Их можно потратить при покупке билета: оплатить ими часть следующего заказа.</span>
+              </span>
+            </span>
+            <span id="totalBonus">+0 ₽</span>
+          </div>
         </div>
 
         <button class="btn btn-primary btn-block" id="checkoutBtn" disabled>
@@ -154,7 +164,7 @@
 
 <!-- ░░░ ABOUT STRIP ░░░ -->
 <section class="about" id="about">
-  <div class="section-head">
+  <div class="section-head" data-reveal>
     <div class="sh-left">
       <p class="section-eyebrow"><span class="se-num">03</span> О театре</p>
       <h2 class="section-title">Тюменский БДТ</h2>
@@ -162,18 +172,18 @@
     <p class="section-note">Сезон XXVII</p>
   </div>
   <div class="about-grid">
-    <p class="about-quote">«Пока в зале горит хотя&nbsp;бы одна лампа — занавес ещё не опущен.»</p>
+    <p class="about-quote" data-reveal>«Пока в зале горит хотя&nbsp;бы одна лампа — занавес ещё не опущен.»</p>
     <div class="about-cols">
-      <div><h4>Адрес</h4><p>г.&nbsp;Тюмень, площадь&nbsp;Театральная,&nbsp;1<br>метро не требуется</p></div>
-      <div><h4>Касса</h4><p>ежедневно 11:00–20:00<br>+7&nbsp;(3452)&nbsp;00-00-00</p></div>
-      <div><h4>Возврат</h4><p>не позднее чем за 3&nbsp;дня<br>до&nbsp;начала спектакля</p></div>
+      <div data-reveal><h4>Адрес</h4><p>г.&nbsp;Тюмень, площадь&nbsp;Театральная,&nbsp;1<br>метро не требуется</p></div>
+      <div data-reveal><h4>Касса</h4><p>ежедневно 11:00–20:00<br>+7&nbsp;(3452)&nbsp;00-00-00</p></div>
+      <div data-reveal><h4>Возврат</h4><p>не позднее чем за 3&nbsp;дня<br>до&nbsp;начала спектакля</p></div>
     </div>
   </div>
 </section>
 
 <!-- ░░░ MORE THIS MONTH ░░░ -->
 <section class="more" id="more">
-  <div class="section-head">
+  <div class="section-head" data-reveal>
     <div class="sh-left">
       <p class="section-eyebrow"><span class="se-num">04</span> Репертуар</p>
       <h2 class="section-title">Ещё в этом месяце</h2>

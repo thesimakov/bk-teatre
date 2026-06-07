@@ -28,14 +28,14 @@
   </div>
 
   <nav class="side-nav" id="sideNav">
-    <a href="#overview" class="active" data-tab="overview"><span class="ni">◉</span> Обзор</a>
-    <a href="#prices" data-tab="prices"><span class="ni">₽</span> Цены</a>
-    <a href="#halls" data-tab="halls"><span class="ni">▦</span> Залы</a>
-    <a href="#events" data-tab="events"><span class="ni">◈</span> События</a>
-    <a href="#actors" data-tab="actors"><span class="ni">☆</span> Актёры</a>
-    <a href="#rental" data-tab="rental"><span class="ni">⌂</span> Аренда зала</a>
-    <a href="#analytics" data-tab="analytics"><span class="ni">∿</span> Аналитика</a>
-    <a href="#ledger" data-tab="ledger"><span class="ni">▤</span> Бухгалтерия</a>
+    <a href="overview" class="active" data-tab="overview"><span class="ni">◉</span> Обзор</a>
+    <a href="prices" data-tab="prices"><span class="ni">₽</span> Цены</a>
+    <a href="halls" data-tab="halls"><span class="ni">▦</span> Залы</a>
+    <a href="events" data-tab="events"><span class="ni">◈</span> События</a>
+    <a href="actors" data-tab="actors"><span class="ni">☆</span> Актёры</a>
+    <a href="rental" data-tab="rental"><span class="ni">⌂</span> Аренда зала</a>
+    <a href="analytics" data-tab="analytics"><span class="ni">∿</span> Аналитика</a>
+    <a href="ledger" data-tab="ledger"><span class="ni">▤</span> Бухгалтерия</a>
   </nav>
 
   <a class="side-back" href="index.html">← Вернуться на сайт</a>
@@ -70,22 +70,50 @@
 
   <!-- ░ TAB: OVERVIEW ░ -->
   <div class="tab" data-panel="overview">
-    <section class="kpis" id="kpis"></section>
+    <div class="ov-filter" id="ovFilter" role="tablist" aria-label="Режим статистики">
+      <button data-ov="general" class="active">Общая статистика</button>
+      <button data-ov="plays">По спектаклям</button>
+    </div>
 
-    <section class="panel-grid">
-      <div class="panel pad chart-panel">
-        <div class="panel-head">
-          <h2>Выручка по дням</h2>
-          <span class="ph-total" id="revTotal">—</span>
+    <!-- general statistics -->
+    <div class="ov-view" data-ov="general">
+      <section class="kpis" id="kpis"></section>
+
+      <section class="panel-grid">
+        <div class="panel pad chart-panel">
+          <div class="panel-head">
+            <h2>Выручка по дням</h2>
+            <span class="ph-total" id="revTotal">—</span>
+          </div>
+          <div class="chart" id="revChart"></div>
         </div>
-        <div class="chart" id="revChart"></div>
-      </div>
-      <div class="panel pad">
-        <div class="panel-head"><h2>Заполняемость зала</h2></div>
-        <div class="gauge" id="occGauge"></div>
-        <ul class="occ-list" id="occList"></ul>
-      </div>
-    </section>
+        <div class="panel pad">
+          <div class="panel-head"><h2>Заполняемость зала</h2></div>
+          <div class="gauge" id="occGauge"></div>
+          <ul class="occ-list" id="occList"></ul>
+        </div>
+      </section>
+    </div>
+
+    <!-- per-play statistics -->
+    <div class="ov-view" data-ov="plays" hidden>
+      <section class="kpis" id="playKpis"></section>
+      <section class="panel pad">
+        <div class="panel-head">
+          <h2>Статистика по спектаклям</h2>
+          <span class="ph-total" id="playsTotal">—</span>
+        </div>
+        <p class="panel-note">Выручка, проданные билеты, средний чек и заполняемость по каждому спектаклю репертуара за период.</p>
+        <div class="table-wrap">
+          <table class="dtable plays-table">
+            <thead>
+              <tr><th>Спектакль</th><th class="num">Показов</th><th class="num">Билетов</th><th class="num">Выручка, ₽</th><th class="num">Ср. чек, ₽</th><th>Заполняемость</th></tr>
+            </thead>
+            <tbody id="playsBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   </div>
 
   <!-- ░ TAB: PRICES ░ -->
@@ -315,7 +343,10 @@
     <section class="panel pad">
       <div class="panel-head">
         <h2>Книга операций</h2>
-        <button class="btn btn-gold" id="addExpense">+ Добавить расход</button>
+        <div class="ledger-actions">
+          <button class="btn btn-plain" id="buildReport">⤓ Сформировать отчёт</button>
+          <button class="btn btn-gold" id="addExpense">+ Добавить расход</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table class="dtable ledger-table">
