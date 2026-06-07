@@ -413,10 +413,47 @@
     toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
   }
 
+  /* ============================================================ MORE THIS MONTH */
+  const REPERTOIRE = [
+    { title: "Чайка",        genre: "Комедия",  date: "18 июня · 19:00", hall: "Большой зал", age: "12+", price: 1200, hue: ["#2c2e5c", "#5b5fae"] },
+    { title: "Вишнёвый сад", genre: "Драма",    date: "21 июня · 18:00", hall: "Большой зал", age: "12+", price: 1500, hue: ["#7a2f4f", "#e04f8c"] },
+    { title: "Ревизор",      genre: "Комедия",  date: "25 июня · 19:00", hall: "Малая сцена", age: "16+", price: 900,  hue: ["#1f5a4c", "#46c35a"] },
+    { title: "Щелкунчик",    genre: "Балет",    date: "28 июня · 12:00", hall: "Большой зал", age: "0+",  price: 1800, hue: ["#7a3a1f", "#e9943f"] },
+  ];
+
+  function buildMore() {
+    const grid = $("#moreGrid");
+    if (!grid) return;
+    grid.innerHTML = REPERTOIRE.map((s, i) => `
+      <article class="show-card">
+        <div class="sc-poster" style="background:linear-gradient(150deg,${s.hue[0]},${s.hue[1]})">
+          <span class="sc-mark" aria-hidden="true">${s.title.charAt(0)}</span>
+          <span class="sc-age">${s.age}</span>
+        </div>
+        <div class="sc-body">
+          <span class="sc-genre">${s.genre}</span>
+          <h3 class="sc-title">${s.title}</h3>
+          <p class="sc-meta">${s.date}<br>${s.hall}</p>
+          <div class="sc-foot">
+            <span class="sc-price">от ${s.price.toLocaleString("ru-RU")} ₽</span>
+            <button class="btn sc-btn" data-i="${i}">Билеты</button>
+          </div>
+        </div>
+      </article>`).join("");
+  }
+
+  $("#moreGrid").addEventListener("click", (e) => {
+    const btn = e.target.closest(".sc-btn");
+    if (!btn) return;
+    const s = REPERTOIRE[+btn.dataset.i];
+    toast(`«${s.title}» · ${s.date} — билеты скоро в продаже`);
+  });
+
   /* ============================================================ INIT */
   buildLegend();
   buildHall();
   buildDates();
   renderSession();
   renderOrder();
+  buildMore();
 })();
