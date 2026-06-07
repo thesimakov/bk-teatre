@@ -298,7 +298,7 @@
   const DATE_CAP = 200;
   const DATES = [
     { d: 7,  m: 5, wd: 0, times: ["19:00"],          left: 0   },
-    { d: 8,  m: 5, wd: 1, times: ["17:00", "21:00"], left: 48  },
+    { d: 8,  m: 5, wd: 1, times: ["17:00", "21:00"], left: 48, seats: { "17:00": 30, "21:00": 6 } },
     { d: 9,  m: 5, wd: 2, times: ["19:00"],          left: 2   },
     { d: 10, m: 5, wd: 3, times: ["19:00"],          left: 6   },
     { d: 11, m: 5, wd: 4, times: ["19:30"],          left: 27  },
@@ -356,11 +356,29 @@
     renderSession();
   });
 
+  // остаток билетов на конкретный сеанс (по карте seats или поровну от дневного)
+  function seatsForTime(dt, t) {
+    if (dt.seats && dt.seats[t] != null) return dt.seats[t];
+    return Math.round(dt.left / dt.times.length);
+  }
+
   function renderSession() {
     const dt = DATES[state.dateIdx];
     $("#sessionDate").textContent = `${dt.d} ${MON[dt.m]} '26 в ${state.time}`;
-    $("#sessionTimes").innerHTML = dt.times.map(t =>
-      `<button class="time-chip${t === state.time ? " active" : ""}" data-t="${t}">${t}</button>`).join("");
+    const multi = dt.times.length >= 2; // индикатор билетов показываем при 2+ сеансах
+    const st = $("#sessionTimes");
+    st.classList.toggle("with-avail", multi);
+    st.innerHTML = dt.times.map(t => {
+      const left = seatsForTime(dt, t);
+      const av = availability(left);
+      const avail = multi
+        ? `<span class="time-avail ${av.cls}">${left > 0 ? left + " " + ticketWord(left) : "нет билетов"}</span>`
+        : "";
+      return `<div class="time-slot">
+        <button class="time-chip${t === state.time ? " active" : ""}" data-t="${t}">${t}</button>
+        ${avail}
+      </div>`;
+    }).join("");
   }
 
   $("#sessionTimes").addEventListener("click", (e) => {
@@ -445,10 +463,10 @@
 
   /* ============================================================ MORE THIS MONTH */
   const REPERTOIRE = [
-    { title: "Чайка",        genre: "Комедия",  date: "18 июня · 19:00", hall: "Большой зал", age: "12+", price: 1200, hue: ["#2c2e5c", "#5b5fae"] },
-    { title: "Вишнёвый сад", genre: "Драма",    date: "21 июня · 18:00", hall: "Большой зал", age: "12+", price: 1500, hue: ["#7a2f4f", "#e04f8c"] },
-    { title: "Ревизор",      genre: "Комедия",  date: "25 июня · 19:00", hall: "Малая сцена", age: "16+", price: 900,  hue: ["#1f5a4c", "#46c35a"] },
-    { title: "Щелкунчик",    genre: "Балет",    date: "28 июня · 12:00", hall: "Большой зал", age: "0+",  price: 1800, hue: ["#7a3a1f", "#e9943f"] },
+    { title: "Чайка",        genre: "Комедия",  date: "18 июня · 19:00", hall: "Большой зал", age: "12+", price: 1200, hue: ["#2c2e5c", "#5b5fae"], img: "assets/repertoire/play-1.webp" },
+    { title: "Вишнёвый сад", genre: "Драма",    date: "21 июня · 18:00", hall: "Большой зал", age: "12+", price: 1500, hue: ["#7a2f4f", "#e04f8c"], img: "assets/repertoire/play-2.webp" },
+    { title: "Ревизор",      genre: "Комедия",  date: "25 июня · 19:00", hall: "Малая сцена", age: "16+", price: 900,  hue: ["#1f5a4c", "#46c35a"], img: "assets/repertoire/play-3.webp" },
+    { title: "Щелкунчик",    genre: "Балет",    date: "28 июня · 12:00", hall: "Большой зал", age: "0+",  price: 1800, hue: ["#7a3a1f", "#e9943f"], img: "assets/repertoire/play-4.webp" },
   ];
 
   function buildMore() {
@@ -458,6 +476,7 @@
       <article class="show-card">
         <div class="sc-poster" style="background:linear-gradient(150deg,${s.hue[0]},${s.hue[1]})">
           <span class="sc-mark" aria-hidden="true">${s.title.charAt(0)}</span>
+          ${s.img ? `<img class="sc-img" src="${s.img}" alt="${s.title}" loading="lazy" onerror="this.remove()">` : ""}
           <span class="sc-age">${s.age}</span>
         </div>
         <div class="sc-body">
