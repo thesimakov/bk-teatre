@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ТБДТ · Кабинет администратора</title>
+<title>ТБДТ · Кабинет администратора · Обзор</title>
 <meta name="description" content="Демонстрационный кабинет администратора: цены, аналитика, бухгалтерия и финансы." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="admin.css" />
 </head>
-<body class="admin">
+<body class="admin" data-page="overview">
 
 <!-- ░░░ SIDEBAR ░░░ -->
 <aside class="side">
@@ -28,14 +28,14 @@
   </div>
 
   <nav class="side-nav" id="sideNav">
-    <a href="overview" class="active" data-tab="overview"><span class="ni">◉</span> Обзор</a>
-    <a href="prices" data-tab="prices"><span class="ni">₽</span> Цены</a>
-    <a href="halls" data-tab="halls"><span class="ni">▦</span> Залы</a>
-    <a href="events" data-tab="events"><span class="ni">◈</span> События</a>
-    <a href="actors" data-tab="actors"><span class="ni">☆</span> Актёры</a>
-    <a href="rental" data-tab="rental"><span class="ni">⌂</span> Аренда зала</a>
-    <a href="analytics" data-tab="analytics"><span class="ni">∿</span> Аналитика</a>
-    <a href="ledger" data-tab="ledger"><span class="ni">▤</span> Бухгалтерия</a>
+    <a href="admin.html" class="active" data-tab="overview"><span class="ni">◉</span> Обзор</a>
+    <a href="prices.html" data-tab="prices"><span class="ni">₽</span> Цены</a>
+    <a href="halls.html" data-tab="halls"><span class="ni">▦</span> Залы</a>
+    <a href="events.html" data-tab="events"><span class="ni">◈</span> События</a>
+    <a href="actors.html" data-tab="actors"><span class="ni">☆</span> Актёры</a>
+    <a href="rental.html" data-tab="rental"><span class="ni">⌂</span> Аренда зала</a>
+    <a href="analytics.html" data-tab="analytics"><span class="ni">∿</span> Аналитика</a>
+    <a href="ledger.html" data-tab="ledger"><span class="ni">▤</span> Бухгалтерия</a>
   </nav>
 
   <a class="side-back" href="index.html">← Вернуться на сайт</a>
@@ -68,7 +68,7 @@
     </div>
   </div>
 
-  <!-- ░ TAB: OVERVIEW ░ -->
+  <!-- ░ OVERVIEW ░ -->
   <div class="tab" data-panel="overview">
     <div class="ov-filter" id="ovFilter" role="tablist" aria-label="Режим статистики">
       <button data-ov="general" class="active">Общая статистика</button>
@@ -116,253 +116,11 @@
     </div>
   </div>
 
-  <!-- ░ TAB: PRICES ░ -->
-  <div class="tab" data-panel="prices" hidden>
-    <section class="panel pad">
-      <div class="panel-head">
-        <h2>Управление ценами</h2>
-        <button class="btn btn-gold" id="addTier">+ Добавить тариф</button>
-      </div>
-      <p class="panel-note">Измените стоимость зон — прогноз выручки и финансовый статус пересчитаются автоматически.</p>
-
-      <div class="table-wrap">
-        <table class="dtable price-table">
-          <thead>
-            <tr><th>Зона</th><th>Цвет</th><th class="num">Мест</th><th class="num">Продано</th><th class="num">Цена, ₽</th><th class="num">Сумма, ₽</th><th></th></tr>
-          </thead>
-          <tbody id="priceBody"></tbody>
-        </table>
-      </div>
-
-      <div class="price-foot">
-        <div class="pf-block">
-          <span>Прогноз выручки</span>
-          <b id="projRevenue">—</b>
-        </div>
-        <div class="pf-block">
-          <span>План на сезон</span>
-          <b id="planRevenue">—</b>
-        </div>
-        <div class="pf-status" id="priceStatus" data-state="up">
-          <span class="pfs-dot"></span><span id="priceStatusText">—</span>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <!-- ░ TAB: HALLS ░ -->
-  <div class="tab" data-panel="halls" hidden>
-    <section class="panel pad">
-      <div class="panel-head">
-        <h2>Залы и тарифная сетка</h2>
-        <div class="hall-controls">
-          <select id="hallSelect" aria-label="Выбор зала"></select>
-          <button class="btn btn-gold" id="newHallBtn">+ Добавить зал</button>
-        </div>
-      </div>
-      <p class="panel-note">Выберите тариф и кликайте по местам (можно вести зажатой кнопкой), чтобы назначить цену зоне. «Ластик» очищает место.</p>
-
-      <form class="newhall" id="newHallForm" hidden>
-        <label>Название <input name="name" required placeholder="Малая сцена" /></label>
-        <label>Рядов <input name="rows" type="number" min="1" max="24" value="8" /></label>
-        <label>Мест в ряду <input name="cols" type="number" min="1" max="36" value="16" /></label>
-        <button class="btn btn-gold" type="submit">Создать зал</button>
-        <button class="btn btn-plain" type="button" id="cancelHall">Отмена</button>
-      </form>
-
-      <div class="palette" id="palette"></div>
-
-      <div class="halls-layout">
-        <div class="seatgrid-scroll">
-          <div class="stage-strip">СЦЕНА</div>
-          <div class="seatgrid" id="seatGrid"></div>
-        </div>
-        <aside class="hall-summary" id="hallSummary"></aside>
-      </div>
-    </section>
-  </div>
-
-  <!-- ░ TAB: EVENTS ░ -->
-  <div class="tab" data-panel="events" hidden>
-    <section class="panel pad">
-      <div class="panel-head">
-        <h2>Каталог спектаклей</h2>
-        <button class="btn btn-gold" id="newEventBtn">+ Добавить спектакль</button>
-      </div>
-      <p class="panel-note">Афиша текущего репертуара. Добавляйте спектакли, указывайте зал, дату показа и возрастной ценз.</p>
-
-      <form class="newevent" id="newEventForm" hidden>
-        <label>Название <input name="title" required placeholder="Вишнёвый сад" /></label>
-        <label>Жанр <input name="genre" list="genreList" placeholder="Драма" /></label>
-        <datalist id="genreList">
-          <option value="Драма"></option><option value="Комедия"></option>
-          <option value="Трагедия"></option><option value="Мюзикл"></option>
-          <option value="Балет"></option><option value="Опера"></option>
-          <option value="Детский"></option>
-        </datalist>
-        <label>Дата показа <input name="date" type="date" /></label>
-        <label>Зал <select name="hall" id="eventHallSelect"></select></label>
-        <label>Возраст
-          <select name="age">
-            <option>0+</option><option>6+</option><option selected>12+</option>
-            <option>16+</option><option>18+</option>
-          </select>
-        </label>
-        <label>Статус
-          <select name="status">
-            <option value="sale" selected>В продаже</option>
-            <option value="soon">Скоро</option>
-            <option value="archive">Архив</option>
-          </select>
-        </label>
-        <button class="btn btn-gold" type="submit">Добавить в афишу</button>
-        <button class="btn btn-plain" type="button" id="cancelEvent">Отмена</button>
-      </form>
-
-      <div class="events-grid" id="eventsGrid"></div>
-    </section>
-  </div>
-
-  <!-- ░ TAB: ACTORS ░ -->
-  <div class="tab" data-panel="actors" hidden>
-    <section class="ledger-sum" id="actorSum"></section>
-    <section class="panel pad">
-      <div class="panel-head">
-        <h2>Труппа театра</h2>
-        <button class="btn btn-gold" id="newActorBtn">+ Добавить актёра</button>
-      </div>
-      <p class="panel-note">Состав труппы, оклады, гонорар за спектакль и текущая занятость в репертуаре.</p>
-
-      <form class="newevent" id="newActorForm" hidden>
-        <label>Имя и фамилия <input name="name" required placeholder="Иван Петров" /></label>
-        <label>Амплуа
-          <select name="role">
-            <option>Ведущий мастер сцены</option>
-            <option selected>Артист драмы</option>
-            <option>Артистка драмы</option>
-            <option>Характерный актёр</option>
-            <option>Артист вспом. состава</option>
-          </select>
-        </label>
-        <label>Оклад, ₽/мес <input name="salary" type="number" min="0" step="1000" value="60000" /></label>
-        <label>Гонорар, ₽/спект. <input name="fee" type="number" min="0" step="500" value="5000" /></label>
-        <label>Спектаклей <input name="shows" type="number" min="0" max="20" value="4" /></label>
-        <button class="btn btn-gold" type="submit">Добавить в труппу</button>
-        <button class="btn btn-plain" type="button" id="cancelActor">Отмена</button>
-      </form>
-
-      <div class="table-wrap">
-        <table class="dtable actor-table">
-          <thead>
-            <tr><th>Актёр</th><th>Амплуа</th><th class="num">Оклад, ₽/мес</th><th class="num">Гонорар, ₽/спект.</th><th>Занятость</th><th></th></tr>
-          </thead>
-          <tbody id="actorBody"></tbody>
-        </table>
-      </div>
-    </section>
-  </div>
-
-  <!-- ░ TAB: RENTAL ░ -->
-  <div class="tab" data-panel="rental" hidden>
-    <section class="ledger-sum" id="rentalSum"></section>
-
-    <section class="panel pad">
-      <div class="panel-head">
-        <h2>График аренды · <span id="rentalMonth">июнь 2026</span></h2>
-        <button class="btn btn-gold" id="newRentalBtn">+ Добавить бронь</button>
-      </div>
-      <p class="panel-note">Диаграмма Ганта по дням и залам: свои спектакли, гастроли других театров и коммерческая аренда. В один день в разных залах могут идти разные показы. Пустые промежутки — свободные даты, куда можно поставить аренду.</p>
-
-      <form class="newevent" id="newRentalForm" hidden>
-        <label>Арендатор / театр <input name="org" required placeholder="Малый театр (Москва)" /></label>
-        <label>Событие <input name="title" placeholder="Гастроли · «Горе от ума»" /></label>
-        <label>Зал <select name="hall" id="rentalHallSelect"></select></label>
-        <label>Тип
-          <select name="type">
-            <option value="own">Свой спектакль</option>
-            <option value="tour" selected>Гастроли</option>
-            <option value="rent">Аренда / мероприятие</option>
-          </select>
-        </label>
-        <label>Дата (день) <input name="start" type="number" min="1" max="30" value="1" /></label>
-        <label>Дней <input name="days" type="number" min="1" max="30" value="2" /></label>
-        <label>Сумма, ₽ <input name="amount" type="number" min="0" step="5000" value="150000" /></label>
-        <label>Статус
-          <select name="status">
-            <option value="confirmed" selected>Подтверждено</option>
-            <option value="option">Бронь</option>
-            <option value="request">Запрос</option>
-          </select>
-        </label>
-        <button class="btn btn-gold" type="submit">Добавить бронь</button>
-        <button class="btn btn-plain" type="button" id="cancelRental">Отмена</button>
-      </form>
-
-      <div class="gantt-scroll">
-        <div class="gantt" id="rentalGantt"></div>
-      </div>
-      <div class="gantt-legend">
-        <span><i class="gl-sw own"></i> Свой спектакль</span>
-        <span><i class="gl-sw tour"></i> Гастроли</span>
-        <span><i class="gl-sw rent"></i> Аренда / мероприятие</span>
-        <span><i class="gl-sw pending"></i> Бронь / запрос</span>
-      </div>
-
-      <div class="table-wrap" style="margin-top:22px">
-        <table class="dtable rental-table">
-          <thead>
-            <tr><th>Арендатор</th><th>Событие</th><th>Зал</th><th>Даты</th><th>Тип</th><th class="num">Сумма, ₽</th><th>Статус</th><th></th></tr>
-          </thead>
-          <tbody id="rentalBody"></tbody>
-        </table>
-      </div>
-    </section>
-  </div>
-
-  <!-- ░ TAB: ANALYTICS ░ -->
-  <div class="tab" data-panel="analytics" hidden>
-    <section class="panel-grid">
-      <div class="panel pad chart-panel">
-        <div class="panel-head"><h2>Динамика среднего чека</h2><span class="ph-total" id="avgTotal">—</span></div>
-        <div class="chart" id="avgChart"></div>
-      </div>
-      <div class="panel pad">
-        <div class="panel-head"><h2>Выручка по зонам</h2></div>
-        <ul class="zonebars" id="zoneBars"></ul>
-      </div>
-    </section>
-    <section class="panel pad">
-      <div class="panel-head"><h2>Каналы продаж</h2></div>
-      <ul class="zonebars channels" id="channelBars"></ul>
-    </section>
-  </div>
-
-  <!-- ░ TAB: LEDGER ░ -->
-  <div class="tab" data-panel="ledger" hidden>
-    <section class="ledger-sum" id="ledgerSum"></section>
-    <section class="panel pad">
-      <div class="panel-head">
-        <h2>Книга операций</h2>
-        <div class="ledger-actions">
-          <button class="btn btn-plain" id="buildReport">⤓ Сформировать отчёт</button>
-          <button class="btn btn-gold" id="addExpense">+ Добавить расход</button>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table class="dtable ledger-table">
-          <thead>
-            <tr><th>Дата</th><th>Операция</th><th>Категория</th><th class="num">Сумма, ₽</th><th>Статус</th></tr>
-          </thead>
-          <tbody id="ledgerBody"></tbody>
-        </table>
-      </div>
-    </section>
-  </div>
-
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="admin-store.js"></script>
 <script src="admin.js"></script>
 </body>
 </html>

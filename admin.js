@@ -66,26 +66,16 @@
   ];
   let ovMode = "general"; // режим Обзора: general | plays
 
-  // editable price tiers
-  let TIERS = [
-    { zone: "Партер",    color: "#e0533f", seats: 166, sold: 150, price: 3500 },
-    { zone: "Амфитеатр", color: "#46c35a", seats: 300, sold: 220, price: 2200 },
-    { zone: "Балкон",    color: "#3f8fe0", seats: 120, sold: 70,  price: 1200 },
-    { zone: "Ложа",      color: "#e04f8c", seats: 24,  sold: 20,  price: 5000 },
-  ];
+  /* ---- shared persisted state (see admin-store.js) ----
+     S is the live AdminStore.state object; S.TIERS / S.LEDGER / S.EVENTS /
+     S.ACTORS / S.RENTALS / S.HALLS are the domain-mutable collections and
+     S.period is the selected UI period. Every mutation must go through
+     AdminStore.update(s => { ... }) so it persists + broadcasts. */
+  const S = window.AdminStore.state;
+
   const PLAN = 1_150_000; // план выручки на сезон, ₽
   const EXTRA_PALETTE = ["#8ce05f", "#e9943f", "#46d6e0", "#b7e05f", "#e8c63f"];
 
-  let LEDGER = [
-    { date: "01.06", op: "Продажа билетов · онлайн",   cat: "Касса",     amount: 318_400, type: "income" },
-    { date: "02.06", op: "Аренда сцены · репетиции",   cat: "Постановка",amount: -64_000, type: "expense" },
-    { date: "03.06", op: "Продажа билетов · касса",    cat: "Касса",     amount: 142_900, type: "income" },
-    { date: "03.06", op: "Гонорары артистов",          cat: "Зарплата",  amount: -210_000,type: "expense" },
-    { date: "04.06", op: "Реклама · соцсети",          cat: "Маркетинг", amount: -38_500, type: "expense" },
-    { date: "05.06", op: "Продажа билетов · агрегаторы",cat: "Партнёры", amount: 96_700,  type: "income" },
-    { date: "06.06", op: "Костюмы и реквизит",         cat: "Постановка",amount: -52_300, type: "expense" },
-    { date: "07.06", op: "Продажа билетов · онлайн",   cat: "Касса",     amount: 274_100, type: "income" },
-  ];
   const EXPENSE_POOL = [
     { op: "Свет и звук · подрядчик", cat: "Техника",   amount: -47_800 },
     { op: "Типография · программки", cat: "Маркетинг", amount: -18_200 },
@@ -94,34 +84,22 @@
   ];
   let expenseIdx = 0;
 
-  let curPeriod = "month";
+  // live collections — read from the shared store (getters keep references fresh
+  // after cross-tab reloads that may replace array instances)
+  const TIERS   = () => S.TIERS;
+  const LEDGER  = () => S.LEDGER;
+  const EVENTS  = () => S.EVENTS;
+  const ACTORS  = () => S.ACTORS;
+  const RENTALS = () => S.RENTALS;
+  const HALLS   = () => S.HALLS;
+  const curPeriod = () => S.period;
 
   /* repertoire: theatre performances catalogue (demo) */
   const STATUS_LABEL = { sale: "В продаже", soon: "Скоро", archive: "Архив" };
-  let EVENTS = [
-    { title: "Гамлет",        genre: "Трагедия", date: "2026-06-12", hall: "Большой зал", age: "16+", status: "sale" },
-    { title: "Чайка",         genre: "Комедия",  date: "2026-06-18", hall: "Большой зал", age: "12+", status: "soon" },
-    { title: "Вишнёвый сад",  genre: "Драма",    date: "2026-06-25", hall: "Большой зал", age: "12+", status: "sale" },
-    { title: "Щелкунчик",     genre: "Балет",    date: "2026-07-03", hall: "Большой зал", age: "0+",  status: "soon" },
-  ];
   const EVENT_HUES = [["#2c2e5c", "#5b5fae"], ["#a8810f", "#f5cd33"], ["#7a2f4f", "#e04f8c"], ["#1f5a4c", "#46c35a"], ["#7a3a1f", "#e9943f"]];
 
   /* troupe: theatre ensemble — salary, per-show fee, repertoire load (demo) */
   const ACTOR_MAX_LOAD = 12; // спектаклей = 100% занятости
-  let ACTORS = [
-    { name: "Аркадий Светлов",   role: "Ведущий мастер сцены", salary: 118000, fee: 12000, shows: 11 },
-    { name: "Вера Кольцова",     role: "Ведущий мастер сцены", salary: 112000, fee: 11000, shows: 10 },
-    { name: "Михаил Дорохов",    role: "Артист драмы",         salary: 86000,  fee: 8000,  shows: 9  },
-    { name: "Ольга Закревская",  role: "Артистка драмы",       salary: 84000,  fee: 7500,  shows: 8  },
-    { name: "Игорь Бельский",    role: "Характерный актёр",    salary: 78000,  fee: 7000,  shows: 7  },
-    { name: "Наталья Гордеева",  role: "Артистка драмы",       salary: 72000,  fee: 6500,  shows: 6  },
-    { name: "Павел Ермаков",     role: "Артист драмы",         salary: 68000,  fee: 6000,  shows: 5  },
-    { name: "Лидия Воронцова",   role: "Артистка драмы",       salary: 64000,  fee: 5500,  shows: 6  },
-    { name: "Семён Рябинин",     role: "Характерный актёр",    salary: 62000,  fee: 5000,  shows: 4  },
-    { name: "Анна Левитина",     role: "Артистка драмы",       salary: 58000,  fee: 4800,  shows: 3  },
-    { name: "Тимур Аскаров",     role: "Артист вспом. состава",salary: 46000,  fee: 3500,  shows: 3  },
-    { name: "Дарья Соловьёва",   role: "Артист вспом. состава",salary: 44000,  fee: 3200,  shows: 2  },
-  ];
 
   /* hall rental: guest tours & commercial bookings on a Gantt timeline (demo) */
   const RENTAL_MONTH = { label: "июнь 2026", days: 30 };
@@ -129,27 +107,6 @@
   const RENTAL_MONTH_IDX = 5; // июнь
   const RENTAL_TYPE = { own: "Свой спектакль", tour: "Гастроли", rent: "Аренда" };
   const RENTAL_STATUS = { confirmed: "Подтверждено", option: "Бронь", request: "Запрос" };
-  // единый график занятости залов: свои спектакли + гастроли + коммерческая аренда.
-  // пустые промежутки = свободные даты, куда можно поставить аренду.
-  let RENTALS = [
-    // ── свои спектакли театра ──
-    { org: "ТБДТ · свой репертуар",           title: "Прощальные гастроли",  hall: "Большой зал", start: 8,  days: 1, type: "own",  amount: 0,      status: "confirmed" },
-    { org: "ТБДТ · свой репертуар",           title: "Гамлет",               hall: "Большой зал", start: 14, days: 1, type: "own",  amount: 0,      status: "confirmed" },
-    { org: "ТБДТ · свой репертуар",           title: "Чайка",                hall: "Большой зал", start: 26, days: 1, type: "own",  amount: 0,      status: "confirmed" },
-    { org: "ТБДТ · свой репертуар",           title: "Ревизор",              hall: "Малая сцена", start: 5,  days: 1, type: "own",  amount: 0,      status: "confirmed" },
-    { org: "ТБДТ · свой репертуар",           title: "Вишнёвый сад",         hall: "Малая сцена", start: 14, days: 1, type: "own",  amount: 0,      status: "confirmed" },
-    { org: "ТБДТ · свой репертуар",           title: "Щелкунчик",            hall: "Малая сцена", start: 27, days: 1, type: "own",  amount: 0,      status: "confirmed" },
-    // ── гастроли других театров ──
-    { org: "Малый театр (Москва)",            title: "«Горе от ума»",        hall: "Большой зал", start: 3,  days: 2, type: "tour", amount: 420000, status: "confirmed" },
-    { org: "Коляда-Театр (Екатеринбург)",     title: "«Ревизор»",            hall: "Большой зал", start: 10, days: 3, type: "tour", amount: 510000, status: "confirmed" },
-    { org: "БДТ им. Товстоногова (СПб)",       title: "Гастроли · «Гроза»",   hall: "Большой зал", start: 19, days: 4, type: "tour", amount: 680000, status: "option" },
-    // ── коммерческая аренда / мероприятия ──
-    { org: "ПАО «СибурТюмень»",               title: "Корпоративный вечер",  hall: "Большой зал", start: 16, days: 1, type: "rent", amount: 280000, status: "confirmed" },
-    { org: "Студия «Новая сцена»",            title: "Фестиваль моноспектаклей", hall: "Малая сцена", start: 10, days: 2, type: "rent", amount: 120000, status: "confirmed" },
-    { org: "Тюменский гос. университет",       title: "Вручение дипломов",    hall: "Малая сцена", start: 19, days: 1, type: "rent", amount: 90000,  status: "option" },
-    { org: "Школа танца «Ритм»",              title: "Отчётный концерт",     hall: "Малая сцена", start: 23, days: 1, type: "rent", amount: 70000,  status: "request" },
-    { org: "Тюменская филармония",            title: "Симфонический вечер",  hall: "Большой зал", start: 28, days: 1, type: "rent", amount: 160000, status: "confirmed" },
-  ];
 
   /* halls: each cell holds a tier index, or -1 for unassigned */
   function seedCells(rows, cols, plan) {
@@ -158,21 +115,6 @@
       for (let c = 0; c < cols; c++) cells[r * cols + c] = plan(r, c, rows, cols);
     return cells;
   }
-  const HALLS = [
-    {
-      name: "Большой зал", rows: 9, cols: 18,
-      cells: seedCells(9, 18, (r, c, rows, cols) => {
-        const centre = 1 - Math.abs(c - (cols - 1) / 2) / ((cols - 1) / 2);
-        if (r < 2) return 0;                 // первые ряды — Партер (дорогой)
-        if (r < 5) return centre > .5 ? 1 : 2;
-        return 3;                            // дальние ряды — Балкон
-      }),
-    },
-    {
-      name: "Малая сцена", rows: 6, cols: 12,
-      cells: seedCells(6, 12, (r) => (r < 2 ? 0 : r < 4 ? 1 : 3)),
-    },
-  ];
   let curHall = 0;
   let activeTier = 0;        // index into TIERS, or -1 = eraser
   let painting = false;
@@ -235,7 +177,8 @@
 
   /* ============================================================ RENDER: OVERVIEW */
   function renderOverview() {
-    const d = PERIODS[curPeriod];
+    if (!$("#kpis")) return;
+    const d = PERIODS[curPeriod()];
     const total = d.revenue.reduce((a, b) => a + b, 0);
     // synthesise a previous-period total (~ from tickets ratio) for deltas
     const prevTotal = total * (d.ticketsPrev / d.tickets);
@@ -275,8 +218,9 @@
   }
 
   function setBanner(delta) {
-    const up = delta >= 0;
     const b = $("#statusBanner");
+    if (!b) return;
+    const up = delta >= 0;
     b.dataset.state = up ? "up" : "down";
     $("#sbMark").textContent = up ? "▲" : "▼";
     $("#sbTitle").textContent = up ? "Продажи растут" : "Просадка продаж";
@@ -288,6 +232,7 @@
 
   /* ============================================================ RENDER: OVERVIEW · BY PLAY */
   function renderPlays() {
+    if (!$("#playKpis")) return;
     const totalRev   = PLAY_STATS.reduce((a, p) => a + p.revenue, 0);
     const totalTick  = PLAY_STATS.reduce((a, p) => a + p.tickets, 0);
     const totalShows = PLAY_STATS.reduce((a, p) => a + p.shows, 0);
@@ -336,13 +281,17 @@
 
   /* ============================================================ RENDER: ANALYTICS */
   function renderAnalytics() {
-    const d = PERIODS[curPeriod];
-    const avgNow = d.avg[d.avg.length - 1];
-    $("#avgTotal").textContent = rub(avgNow);
-    $("#avgChart").innerHTML = lineChart(d.avg, d.labels, "#a8810f", rub);
+    if (!$("#avgChart") && !$("#zoneBars")) return;
+    const d = PERIODS[curPeriod()];
+    if ($("#avgChart")) {
+      const avgNow = d.avg[d.avg.length - 1];
+      $("#avgTotal").textContent = rub(avgNow);
+      $("#avgChart").innerHTML = lineChart(d.avg, d.labels, "#a8810f", rub);
+    }
+    if (!$("#zoneBars")) return;
 
     // revenue by zone (from current tiers)
-    const zoneRev = TIERS.map(t => ({ name: t.zone, val: t.price * t.sold, color: t.color }));
+    const zoneRev = TIERS().map(t => ({ name: t.zone, val: t.price * t.sold, color: t.color }));
     const maxZ = Math.max(...zoneRev.map(z => z.val)) || 1;
     $("#zoneBars").innerHTML = zoneRev.map(z =>
       `<li>
@@ -361,7 +310,8 @@
 
   /* ============================================================ RENDER: PRICES */
   function renderPrices() {
-    $("#priceBody").innerHTML = TIERS.map((t, i) => `
+    if (!$("#priceBody")) return;
+    $("#priceBody").innerHTML = TIERS().map((t, i) => `
       <tr data-i="${i}">
         <td><span class="zone-name"><span class="zone-dot" style="background:${t.color}"></span>${t.zone}</span></td>
         <td><span class="zone-dot" style="background:${t.color};display:inline-block"></span></td>
@@ -372,7 +322,7 @@
         <td class="num"><button class="row-rm" data-i="${i}" aria-label="Удалить тариф" title="Удалить">✕</button></td>
       </tr>`).join("");
 
-    const projected = TIERS.reduce((a, t) => a + t.price * t.sold, 0);
+    const projected = TIERS().reduce((a, t) => a + t.price * t.sold, 0);
     $("#projRevenue").textContent = rub(projected);
     $("#planRevenue").textContent = rub(PLAN);
 
@@ -390,8 +340,9 @@
 
   /* ============================================================ RENDER: LEDGER */
   function renderLedger() {
-    const income = LEDGER.filter(e => e.type === "income").reduce((a, e) => a + e.amount, 0);
-    const expense = LEDGER.filter(e => e.type === "expense").reduce((a, e) => a + e.amount, 0);
+    if (!$("#ledgerBody")) return;
+    const income = LEDGER().filter(e => e.type === "income").reduce((a, e) => a + e.amount, 0);
+    const expense = LEDGER().filter(e => e.type === "expense").reduce((a, e) => a + e.amount, 0);
     const profit = income + expense;
 
     $("#ledgerSum").innerHTML = `
@@ -399,7 +350,7 @@
       <div class="ls-card expense"><span>Расходы</span><b>${rub(expense)}</b></div>
       <div class="ls-card profit"><span>Прибыль</span><b>${rub(profit)}</b></div>`;
 
-    $("#ledgerBody").innerHTML = LEDGER.map(e => `
+    $("#ledgerBody").innerHTML = LEDGER().map(e => `
       <tr>
         <td>${e.date}</td>
         <td style="color:var(--ink);font-weight:600">${e.op}</td>
@@ -410,10 +361,11 @@
   }
 
   /* ============================================================ RENDER: HALLS */
-  const tierAt = (i) => (i >= 0 && i < TIERS.length ? TIERS[i] : null);
+  const tierAt = (i) => (i >= 0 && i < TIERS().length ? TIERS()[i] : null);
 
   function renderPalette() {
-    const chips = TIERS.map((t, i) =>
+    if (!$("#palette")) return;
+    const chips = TIERS().map((t, i) =>
       `<button class="pal-chip${i === activeTier ? " active" : ""}" data-t="${i}">
          <span class="pc-sw" style="background:${t.color}"></span>${t.zone} · ${rub(t.price)}
        </button>`).join("");
@@ -424,12 +376,17 @@
   }
 
   function renderHallSelect() {
-    $("#hallSelect").innerHTML = HALLS.map((h, i) =>
+    if (!$("#hallSelect")) return;
+    if (curHall >= HALLS().length) curHall = 0;
+    $("#hallSelect").innerHTML = HALLS().map((h, i) =>
       `<option value="${i}"${i === curHall ? " selected" : ""}>${h.name} · ${h.rows}×${h.cols}</option>`).join("");
   }
 
   function renderGrid() {
-    const h = HALLS[curHall];
+    if (!$("#seatGrid")) return;
+    if (curHall >= HALLS().length) curHall = 0;
+    const h = HALLS()[curHall];
+    if (!h) return;
     let html = "";
     for (let r = 0; r < h.rows; r++) {
       let row = `<div class="sg-row"><span class="sg-rlabel">${r + 1}</span>`;
@@ -446,7 +403,10 @@
   }
 
   function renderHallSummary() {
-    const h = HALLS[curHall];
+    if (!$("#hallSummary")) return;
+    if (curHall >= HALLS().length) curHall = 0;
+    const h = HALLS()[curHall];
+    if (!h) return;
     const counts = {};
     h.cells.forEach((ti) => { if (ti >= 0) counts[ti] = (counts[ti] || 0) + 1; });
     const used = Object.keys(counts).map(Number).sort((a, b) => a - b);
@@ -480,10 +440,11 @@
 
   function paintCell(cellEl) {
     const idx = +cellEl.dataset.i;
-    const h = HALLS[curHall];
-    if (h.cells[idx] === activeTier) return;
-    h.cells[idx] = activeTier;
-    const t = tierAt(activeTier);
+    const h = HALLS()[curHall];
+    if (!h || h.cells[idx] === activeTier) return;
+    const at = activeTier;
+    AdminStore.update(s => { s.HALLS[curHall].cells[idx] = at; });
+    const t = tierAt(at);
     cellEl.style.background = t ? t.color : "";
     cellEl.classList.toggle("set", !!t);
     cellEl.title = t ? `${t.zone} · ${rub(t.price)}` : "не назначено";
@@ -494,7 +455,7 @@
   function rentalHallSelect() {
     const sel = $("#rentalHallSelect");
     if (!sel) return;
-    sel.innerHTML = HALLS.map(h => `<option value="${h.name}">${h.name}</option>`).join("");
+    sel.innerHTML = HALLS().map(h => `<option value="${h.name}">${h.name}</option>`).join("");
   }
   function rentalDates(r) {
     const end = r.start + r.days - 1;
@@ -503,18 +464,19 @@
   }
 
   function renderRental() {
+    if (!$("#rentalGantt")) return;
     rentalHallSelect();
     const D = RENTAL_MONTH.days;
-    $("#rentalMonth").textContent = RENTAL_MONTH.label;
+    if ($("#rentalMonth")) $("#rentalMonth").textContent = RENTAL_MONTH.label;
 
     // summary
-    const total = RENTALS.length;
-    const income = RENTALS
+    const total = RENTALS().length;
+    const income = RENTALS()
       .filter(r => r.status === "confirmed" && r.type !== "own")
       .reduce((a, r) => a + r.amount, 0);
-    const primary = HALLS[0] ? HALLS[0].name : "Большой зал";
+    const primary = HALLS()[0] ? HALLS()[0].name : "Большой зал";
     const busyPrimary = new Set();
-    RENTALS.forEach(r => { if (r.hall === primary) for (let d = r.start; d < r.start + r.days; d++) busyPrimary.add(d); });
+    RENTALS().forEach(r => { if (r.hall === primary) for (let d = r.start; d < r.start + r.days; d++) busyPrimary.add(d); });
     const freePrimary = D - busyPrimary.size;
     $("#rentalSum").innerHTML = `
       <div class="ls-card"><span>Событий в графике</span><b>${total}</b></div>
@@ -545,11 +507,11 @@
     };
 
     // gantt body grouped by hall — same day in different halls shows as parallel rows
-    const hallOrder = HALLS.map(h => h.name);
-    RENTALS.forEach(r => { if (!hallOrder.includes(r.hall)) hallOrder.push(r.hall); });
+    const hallOrder = HALLS().map(h => h.name);
+    RENTALS().forEach(r => { if (!hallOrder.includes(r.hall)) hallOrder.push(r.hall); });
     let body = "";
     hallOrder.forEach(hallName => {
-      const items = RENTALS.filter(r => r.hall === hallName).sort((a, b) => a.start - b.start);
+      const items = RENTALS().filter(r => r.hall === hallName).sort((a, b) => a.start - b.start);
       if (!items.length) return;
       body += `<div class="g-group">▦ ${hallName} · ${items.length}</div>`;
       body += items.map(rowHtml).join("");
@@ -558,7 +520,7 @@
     $("#rentalGantt").innerHTML = `<div class="gantt-head">${head}</div>${body}`;
 
     // table
-    $("#rentalBody").innerHTML = RENTALS.map((r, i) => `
+    $("#rentalBody").innerHTML = RENTALS().map((r, i) => `
       <tr data-i="${i}">
         <td style="color:var(--ink);font-weight:600">${r.org}</td>
         <td>${r.title || "—"}</td>
@@ -582,16 +544,17 @@
   }
 
   function renderActors() {
-    const count = ACTORS.length;
-    const payroll = ACTORS.reduce((a, x) => a + x.salary, 0);
-    const avgLoad = count ? ACTORS.reduce((a, x) => a + x.shows, 0) / count / ACTOR_MAX_LOAD : 0;
+    if (!$("#actorBody")) return;
+    const count = ACTORS().length;
+    const payroll = ACTORS().reduce((a, x) => a + x.salary, 0);
+    const avgLoad = count ? ACTORS().reduce((a, x) => a + x.shows, 0) / count / ACTOR_MAX_LOAD : 0;
 
     $("#actorSum").innerHTML = `
       <div class="ls-card"><span>Артистов в труппе</span><b>${count}</b></div>
       <div class="ls-card expense"><span>Фонд окладов · мес</span><b>${rub(payroll)}</b></div>
       <div class="ls-card profit"><span>Средняя занятость</span><b>${Math.round(avgLoad * 100)}%</b></div>`;
 
-    $("#actorBody").innerHTML = ACTORS.map((a, i) => {
+    $("#actorBody").innerHTML = ACTORS().map((a, i) => {
       const pct = Math.min(1, a.shows / ACTOR_MAX_LOAD);
       const lvl = loadLevel(pct);
       return `<tr data-i="${i}">
@@ -622,16 +585,17 @@
   function renderEventHallSelect() {
     const sel = $("#eventHallSelect");
     if (!sel) return;
-    sel.innerHTML = HALLS.map(h => `<option value="${h.name}">${h.name}</option>`).join("");
+    sel.innerHTML = HALLS().map(h => `<option value="${h.name}">${h.name}</option>`).join("");
   }
 
   function renderEvents() {
+    if (!$("#eventsGrid")) return;
     renderEventHallSelect();
-    if (!EVENTS.length) {
+    if (!EVENTS().length) {
       $("#eventsGrid").innerHTML = `<p class="ev-empty">Афиша пуста. Нажмите «Добавить спектакль», чтобы создать первый показ.</p>`;
       return;
     }
-    $("#eventsGrid").innerHTML = EVENTS.map((ev, i) => {
+    $("#eventsGrid").innerHTML = EVENTS().map((ev, i) => {
       const [c1, c2] = EVENT_HUES[i % EVENT_HUES.length];
       const initial = (ev.title || "?").trim().charAt(0).toUpperCase();
       const st = ev.status || "sale";
@@ -655,16 +619,26 @@
   }
 
   /* ============================================================ EVENTS */
-  // tabs
-  const TITLES = { overview: "Обзор", prices: "Цены", halls: "Залы", events: "События", actors: "Актёры", rental: "Аренда зала", analytics: "Аналитика", ledger: "Бухгалтерия" };
-  const TAB_RENDER = {
-    overview: renderOverviewTab, analytics: renderAnalytics, prices: renderPrices,
-    halls: renderHalls, events: renderEvents, actors: renderActors,
-    rental: renderRental, ledger: renderLedger,
-  };
+  // helper: attach a listener only if the element exists on this page
+  const on = (sel, evt, fn) => { const el = $(sel); if (el) el.addEventListener(evt, fn); return el; };
+
+  // base directory of the admin page, e.g. "/" or "/bk/" — used for asset paths
+  const ROUTE_BASE = location.pathname.replace(/[^/]*$/, "");
+
+  // render whichever sections are present on the current page
+  function renderAll() {
+    renderOverviewTab();
+    renderAnalytics();
+    renderPrices();
+    renderHalls();
+    renderEvents();
+    renderActors();
+    renderRental();
+    renderLedger();
+  }
 
   // Обзор: переключатель «Общая статистика / По спектаклям»
-  $("#ovFilter").addEventListener("click", (e) => {
+  on("#ovFilter", "click", (e) => {
     const btn = e.target.closest("button[data-ov]");
     if (!btn) return;
     ovMode = btn.dataset.ov;
@@ -673,67 +647,28 @@
     renderOverviewTab();
   });
 
-  /* ---- path-based routing: each section is a direct link like /halls ---- */
-  // base directory of the admin page, e.g. "/" or "/bk/"
-  const ROUTE_BASE = location.pathname.replace(/[^/]*$/, "");
-  const isTab = (t) => !!TITLES[t];
-  // last path segment → tab name (e.g. "/bk/halls" → "halls"); admin.html/"" → overview
-  function tabFromPath() {
-    const seg = decodeURIComponent(location.pathname.split("/").pop() || "");
-    return isTab(seg) ? seg : "overview";
-  }
-
-  function activateTab(tab) {
-    if (!isTab(tab)) tab = "overview";
-    $$("#sideNav a").forEach(x => x.classList.toggle("active", x.dataset.tab === tab));
-    $$(".tab").forEach(p => (p.hidden = p.dataset.panel !== tab));
-    $("#pageTitle").textContent = TITLES[tab];
-    // the period status banner reflects overall sales — show on Обзор only
-    $("#statusBanner").style.display = tab === "overview" ? "" : "none";
-    // refresh the panel being opened so edits made elsewhere propagate
-    TAB_RENDER[tab]?.();
-  }
-
-  // navigate: push a clean path (/halls) and switch the tab. Falls back to a
-  // plain tab switch where the History API is unavailable (e.g. file://).
-  function goToTab(tab, replace = false) {
-    activateTab(tab);
-    try {
-      const url = ROUTE_BASE + tab;
-      if (replace) history.replaceState({ tab }, "", url);
-      else history.pushState({ tab }, "", url);
-    } catch (_) { /* file:// — keep working without URL change */ }
-  }
-
-  $("#sideNav").addEventListener("click", (e) => {
-    const a = e.target.closest("a[data-tab]");
-    if (!a) return;
-    e.preventDefault();
-    goToTab(a.dataset.tab);
-  });
-
-  // browser back/forward
-  window.addEventListener("popstate", () => activateTab(tabFromPath()));
-
-  // period
-  $("#period").addEventListener("click", (e) => {
+  // period — persists to the shared store, re-renders present sections
+  on("#period", "click", (e) => {
     const btn = e.target.closest("button[data-p]");
     if (!btn) return;
-    curPeriod = btn.dataset.p;
+    const p = btn.dataset.p;
     $$("#period button").forEach(b => b.classList.toggle("active", b === btn));
+    AdminStore.update(s => { s.period = p; });
     renderOverviewTab();
     renderAnalytics();
   });
 
   // price editing (live)
-  $("#priceBody").addEventListener("input", (e) => {
+  on("#priceBody", "input", (e) => {
     const inp = e.target.closest(".price-input");
     if (!inp) return;
     const i = +inp.dataset.i;
-    TIERS[i].price = Math.max(0, +inp.value || 0);
+    const v = Math.max(0, +inp.value || 0);
+    AdminStore.update(s => { if (s.TIERS[i]) s.TIERS[i].price = v; });
     // update only the row sum + footer without full re-render (keep focus)
-    inp.closest("tr").querySelector(".cell-sum").textContent = rub(TIERS[i].price * TIERS[i].sold);
-    const projected = TIERS.reduce((a, t) => a + t.price * t.sold, 0);
+    const tier = TIERS()[i];
+    inp.closest("tr").querySelector(".cell-sum").textContent = rub(tier.price * tier.sold);
+    const projected = TIERS().reduce((a, t) => a + t.price * t.sold, 0);
     $("#projRevenue").textContent = rub(projected);
     const up = projected >= PLAN;
     const delta = ((projected - PLAN) / PLAN) * 100;
@@ -745,22 +680,24 @@
   });
 
   // remove tier
-  $("#priceBody").addEventListener("click", (e) => {
+  on("#priceBody", "click", (e) => {
     const rm = e.target.closest(".row-rm");
     if (!rm) return;
-    if (TIERS.length <= 1) { toast("Нужен хотя бы один тариф"); return; }
-    TIERS.splice(+rm.dataset.i, 1);
+    if (TIERS().length <= 1) { toast("Нужен хотя бы один тариф"); return; }
+    AdminStore.update(s => { s.TIERS.splice(+rm.dataset.i, 1); });
     renderPrices();
     toast("Тариф удалён");
   });
 
   // add tier
-  $("#addTier").addEventListener("click", () => {
-    const n = TIERS.length;
-    TIERS.push({
-      zone: "Новая зона " + n,
-      color: EXTRA_PALETTE[(n - 4 + EXTRA_PALETTE.length) % EXTRA_PALETTE.length] || "#8ce05f",
-      seats: 60, sold: 30, price: 2000,
+  on("#addTier", "click", () => {
+    const n = TIERS().length;
+    AdminStore.update(s => {
+      s.TIERS.push({
+        zone: "Новая зона " + n,
+        color: EXTRA_PALETTE[(n - 4 + EXTRA_PALETTE.length) % EXTRA_PALETTE.length] || "#8ce05f",
+        seats: 60, sold: 30, price: 2000,
+      });
     });
     renderPrices();
     toast("Добавлен новый тариф — задайте цену");
@@ -768,23 +705,25 @@
   });
 
   // add expense
-  $("#addExpense").addEventListener("click", () => {
+  on("#addExpense", "click", () => {
     const tpl = EXPENSE_POOL[expenseIdx % EXPENSE_POOL.length];
     expenseIdx++;
     const day = 8 + expenseIdx;
-    LEDGER.push({ date: `${String(day).padStart(2, "0")}.06`, op: tpl.op, cat: tpl.cat, amount: tpl.amount, type: "expense" });
+    AdminStore.update(s => {
+      s.LEDGER.push({ date: `${String(day).padStart(2, "0")}.06`, op: tpl.op, cat: tpl.cat, amount: tpl.amount, type: "expense" });
+    });
     renderLedger();
     toast("Расход добавлен в книгу операций");
   });
 
   // build report — открывает образец PDF-отчёта (книга операций)
-  $("#buildReport").addEventListener("click", () => {
+  on("#buildReport", "click", () => {
     toast("Открываю отчёт (образец PDF)…");
     window.open(ROUTE_BASE + "docs/otchet-buhgalteriya-shablon.pdf", "_blank");
   });
 
   /* ---- halls: palette select ---- */
-  $("#palette").addEventListener("click", (e) => {
+  on("#palette", "click", (e) => {
     const chip = e.target.closest(".pal-chip");
     if (!chip) return;
     activeTier = +chip.dataset.t;
@@ -793,69 +732,73 @@
 
   /* ---- halls: paint by click & drag (pointer events: mouse + touch) ---- */
   const grid = $("#seatGrid");
-  grid.addEventListener("pointerdown", (e) => {
-    const cell = e.target.closest(".sg-cell");
-    if (!cell) return;
-    painting = true;
-    paintCell(cell);
-    e.preventDefault();
-  });
-  grid.addEventListener("pointermove", (e) => {
-    if (!painting) return;
-    const el = document.elementFromPoint(e.clientX, e.clientY);
-    const cell = el && el.closest(".sg-cell");
-    if (cell) paintCell(cell);
-  });
-  document.addEventListener("pointerup", () => { painting = false; });
-  grid.addEventListener("contextmenu", (e) => e.preventDefault());
+  if (grid) {
+    grid.addEventListener("pointerdown", (e) => {
+      const cell = e.target.closest(".sg-cell");
+      if (!cell) return;
+      painting = true;
+      paintCell(cell);
+      e.preventDefault();
+    });
+    grid.addEventListener("pointermove", (e) => {
+      if (!painting) return;
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const cell = el && el.closest(".sg-cell");
+      if (cell) paintCell(cell);
+    });
+    document.addEventListener("pointerup", () => { painting = false; });
+    grid.addEventListener("contextmenu", (e) => e.preventDefault());
+  }
 
   /* ---- halls: switch hall ---- */
-  $("#hallSelect").addEventListener("change", (e) => {
+  on("#hallSelect", "change", (e) => {
     curHall = +e.target.value;
     renderGrid();
     renderHallSummary();
   });
 
   /* ---- halls: add-hall form ---- */
-  $("#newHallBtn").addEventListener("click", () => {
+  on("#newHallBtn", "click", () => {
     const f = $("#newHallForm");
     f.hidden = !f.hidden;
     if (!f.hidden) f.name.focus();
   });
-  $("#cancelHall").addEventListener("click", () => { $("#newHallForm").hidden = true; });
-  $("#newHallForm").addEventListener("submit", (e) => {
+  on("#cancelHall", "click", () => { $("#newHallForm").hidden = true; });
+  on("#newHallForm", "submit", (e) => {
     e.preventDefault();
     const f = e.target;
     const name = f.name.value.trim() || "Новый зал";
     const rows = Math.max(1, Math.min(24, +f.rows.value || 8));
     const cols = Math.max(1, Math.min(36, +f.cols.value || 16));
-    HALLS.push({ name, rows, cols, cells: seedCells(rows, cols) });
-    curHall = HALLS.length - 1;
+    AdminStore.update(s => { s.HALLS.push({ name, rows, cols, cells: seedCells(rows, cols) }); });
+    curHall = HALLS().length - 1;
     f.reset(); f.hidden = true;
     renderHalls();
     toast(`Зал «${name}» создан — разметьте тарифы`);
   });
 
   /* ---- events: toggle add form ---- */
-  $("#newEventBtn").addEventListener("click", () => {
+  on("#newEventBtn", "click", () => {
     const f = $("#newEventForm");
     renderEventHallSelect();
     f.hidden = !f.hidden;
     if (!f.hidden) f.title.focus();
   });
-  $("#cancelEvent").addEventListener("click", () => { $("#newEventForm").hidden = true; });
-  $("#newEventForm").addEventListener("submit", (e) => {
+  on("#cancelEvent", "click", () => { $("#newEventForm").hidden = true; });
+  on("#newEventForm", "submit", (e) => {
     e.preventDefault();
     const f = e.target;
     const title = f.title.value.trim();
     if (!title) { toast("Укажите название спектакля"); return; }
-    EVENTS.push({
-      title,
-      genre: f.genre.value.trim() || "Спектакль",
-      date: f.date.value || "",
-      hall: f.hall.value || (HALLS[0] && HALLS[0].name) || "—",
-      age: f.age.value,
-      status: f.status.value,
+    AdminStore.update(s => {
+      s.EVENTS.push({
+        title,
+        genre: f.genre.value.trim() || "Спектакль",
+        date: f.date.value || "",
+        hall: f.hall.value || (s.HALLS[0] && s.HALLS[0].name) || "—",
+        age: f.age.value,
+        status: f.status.value,
+      });
     });
     f.reset(); f.hidden = true;
     renderEvents();
@@ -863,38 +806,41 @@
   });
 
   /* ---- events: remove card ---- */
-  $("#eventsGrid").addEventListener("click", (e) => {
+  on("#eventsGrid", "click", (e) => {
     const rm = e.target.closest(".ev-rm");
     if (!rm) return;
-    const removed = EVENTS.splice(+rm.dataset.i, 1)[0];
+    let removed;
+    AdminStore.update(s => { removed = s.EVENTS.splice(+rm.dataset.i, 1)[0]; });
     renderEvents();
     toast(removed ? `Спектакль «${removed.title}» удалён` : "Спектакль удалён");
   });
 
   /* ---- rental: toggle add form ---- */
-  $("#newRentalBtn").addEventListener("click", () => {
+  on("#newRentalBtn", "click", () => {
     const f = $("#newRentalForm");
     rentalHallSelect();
     f.hidden = !f.hidden;
     if (!f.hidden) f.org.focus();
   });
-  $("#cancelRental").addEventListener("click", () => { $("#newRentalForm").hidden = true; });
-  $("#newRentalForm").addEventListener("submit", (e) => {
+  on("#cancelRental", "click", () => { $("#newRentalForm").hidden = true; });
+  on("#newRentalForm", "submit", (e) => {
     e.preventDefault();
     const f = e.target;
     const org = f.org.value.trim();
     if (!org) { toast("Укажите арендатора"); return; }
     const D = RENTAL_MONTH.days;
     const start = Math.max(1, Math.min(D, +f.start.value || 1));
-    RENTALS.push({
-      org,
-      title: f.title.value.trim(),
-      hall: f.hall.value || (HALLS[0] && HALLS[0].name) || "—",
-      start,
-      days: Math.max(1, Math.min(D - start + 1, +f.days.value || 1)),
-      type: f.type.value,
-      amount: Math.max(0, +f.amount.value || 0),
-      status: f.status.value,
+    AdminStore.update(s => {
+      s.RENTALS.push({
+        org,
+        title: f.title.value.trim(),
+        hall: f.hall.value || (s.HALLS[0] && s.HALLS[0].name) || "—",
+        start,
+        days: Math.max(1, Math.min(D - start + 1, +f.days.value || 1)),
+        type: f.type.value,
+        amount: Math.max(0, +f.amount.value || 0),
+        status: f.status.value,
+      });
     });
     f.reset(); f.hidden = true;
     renderRental();
@@ -902,32 +848,35 @@
   });
 
   /* ---- rental: remove row ---- */
-  $("#rentalBody").addEventListener("click", (e) => {
+  on("#rentalBody", "click", (e) => {
     const rm = e.target.closest(".row-rm");
     if (!rm) return;
-    const removed = RENTALS.splice(+rm.dataset.i, 1)[0];
+    let removed;
+    AdminStore.update(s => { removed = s.RENTALS.splice(+rm.dataset.i, 1)[0]; });
     renderRental();
     toast(removed ? `Бронь «${removed.org}» удалена` : "Бронь удалена");
   });
 
   /* ---- actors: toggle add form ---- */
-  $("#newActorBtn").addEventListener("click", () => {
+  on("#newActorBtn", "click", () => {
     const f = $("#newActorForm");
     f.hidden = !f.hidden;
     if (!f.hidden) f.name.focus();
   });
-  $("#cancelActor").addEventListener("click", () => { $("#newActorForm").hidden = true; });
-  $("#newActorForm").addEventListener("submit", (e) => {
+  on("#cancelActor", "click", () => { $("#newActorForm").hidden = true; });
+  on("#newActorForm", "submit", (e) => {
     e.preventDefault();
     const f = e.target;
     const name = f.name.value.trim();
     if (!name) { toast("Укажите имя актёра"); return; }
-    ACTORS.push({
-      name,
-      role: f.role.value,
-      salary: Math.max(0, +f.salary.value || 0),
-      fee: Math.max(0, +f.fee.value || 0),
-      shows: Math.max(0, Math.min(20, +f.shows.value || 0)),
+    AdminStore.update(s => {
+      s.ACTORS.push({
+        name,
+        role: f.role.value,
+        salary: Math.max(0, +f.salary.value || 0),
+        fee: Math.max(0, +f.fee.value || 0),
+        shows: Math.max(0, Math.min(20, +f.shows.value || 0)),
+      });
     });
     f.reset(); f.hidden = true;
     renderActors();
@@ -935,10 +884,11 @@
   });
 
   /* ---- actors: remove row ---- */
-  $("#actorBody").addEventListener("click", (e) => {
+  on("#actorBody", "click", (e) => {
     const rm = e.target.closest(".row-rm");
     if (!rm) return;
-    const removed = ACTORS.splice(+rm.dataset.i, 1)[0];
+    let removed;
+    AdminStore.update(s => { removed = s.ACTORS.splice(+rm.dataset.i, 1)[0]; });
     renderActors();
     toast(removed ? `Актёр «${removed.name}» удалён из труппы` : "Актёр удалён");
   });
@@ -947,6 +897,7 @@
   let tT;
   function toast(msg) {
     const el = $("#toast");
+    if (!el) return;
     el.textContent = msg;
     el.classList.add("show");
     clearTimeout(tT);
@@ -954,16 +905,22 @@
   }
 
   /* ============================================================ INIT */
-  renderOverview();
-  renderAnalytics();
-  renderPrices();
-  renderHalls();
-  renderEvents();
-  renderActors();
-  renderRental();
-  renderLedger();
+  // sync the period control to the persisted preference
+  function syncPeriodControl() {
+    const p = curPeriod();
+    $$("#period button").forEach(b => b.classList.toggle("active", b.dataset.p === p));
+  }
 
-  // open the tab named in the URL (e.g. /rental), default to Обзор, and
-  // normalise the address bar to the clean section path
-  goToTab(tabFromPath(), true);
+  // render the sections present on this page
+  renderAll();
+  syncPeriodControl();
+
+  // live-update this page when state changes elsewhere (other tab / file).
+  // Skip a full re-render while the user is actively painting the hall grid
+  // (each painted cell is updated in place by paintCell).
+  AdminStore.subscribe(() => {
+    if (painting) return;
+    renderAll();
+    syncPeriodControl();
+  });
 })();
