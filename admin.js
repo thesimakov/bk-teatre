@@ -604,7 +604,7 @@
     rental: renderRental, ledger: renderLedger,
   };
 
-  function activateTab(tab, updateHash = true) {
+  function activateTab(tab, normalizeHash = false) {
     if (!TITLES[tab]) tab = "overview";
     $$("#sideNav a").forEach(x => x.classList.toggle("active", x.dataset.tab === tab));
     $$(".tab").forEach(p => (p.hidden = p.dataset.panel !== tab));
@@ -613,7 +613,8 @@
     $("#statusBanner").style.display = tab === "overview" ? "" : "none";
     // refresh the panel being opened so edits made elsewhere propagate
     TAB_RENDER[tab]?.();
-    if (updateHash && location.hash.slice(1) !== tab) {
+    // on first load, write a clean hash without adding a history entry
+    if (normalizeHash && location.hash.slice(1) !== tab) {
       history.replaceState(null, "", "#" + tab);
     }
   }
@@ -622,11 +623,14 @@
     const a = e.target.closest("a[data-tab]");
     if (!a) return;
     e.preventDefault();
-    activateTab(a.dataset.tab);
+    const tab = a.dataset.tab;
+    // changing the hash adds a history entry and fires hashchange → activateTab
+    if (location.hash.slice(1) === tab) activateTab(tab);
+    else location.hash = tab;
   });
 
   // deep-linking: react to browser back/forward and manual hash edits
-  window.addEventListener("hashchange", () => activateTab(location.hash.slice(1), false));
+  window.addEventListener("hashchange", () => activateTab(location.hash.slice(1) || "overview"));
 
   // period
   $("#period").addEventListener("click", (e) => {
@@ -871,5 +875,5 @@
   renderLedger();
 
   // open the tab named in the URL (e.g. admin.html#rental), default to Обзор
-  activateTab(location.hash.slice(1) || "overview", false);
+  activateTab(location.hash.slice(1) || "overview", true);
 })();
